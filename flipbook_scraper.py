@@ -98,6 +98,34 @@ def download_files(all_files,temp_dir):
     return()
 
 
+def fix_font(font_data):
+    '''Function to take the font data from the .svg files and write it to the path,
+    then fix the svglib/reportlabs font issues'''
+
+
+    return()
+
+def fix_svg(file_base):
+    '''This function pulls out the width, heigh, and font information from the .svg.
+    It then inserts an image tag pointing to the .png file with the same name,
+    this allows them to render properly as standalone .svg files.'''
+
+    with open(file_base + '.svg','r+',encoding='utf-8') as svg_object:
+        svg_data = svg_object.read()
+        width_height = re.findall(r'width="(.*?)" height="(.*?)"',svg_data)[1]
+        font_data = re.findall(r'@font-face {.*?}',svg_data)
+        width = width_height[0]
+        height = width_height[1]
+        png_tag = '<svg:image href="{}.png" x="0" y="0" width="{}" height="{}" />'.format(file_base,width,height)
+        svg_list = svg_data.split('<svg:defs>')
+        svg_list.insert(1,png_tag + '<svg:defs>')
+        svg_data = ''.join(svg_list)
+        svg_object.seek(0)
+        svg_object.write(svg_data)
+
+    fix_font(font_data)
+    return(width,height)
+
 def svg_pdf(temp_dir):
     '''Given a directory with .svg and .png files, it converts the .svg files to individual .pdf files.
     if there is a .png with the same file name, it draws the .svg on top of the .png file'''
@@ -106,19 +134,22 @@ def svg_pdf(temp_dir):
 
     for item in svg_files:
         base_file = str(item).removesuffix('.svg')
+        width,height = fix_svg(base_file)
 
         #to-do, fix the font issues. Fonts are embedded in the .svg files.
         drawing = svg2rlg(item)
         my_canvas = canvas.Canvas(base_file + '.pdf')
         
         #to-do, get height, width from .svg instead of hard-coding.
-        my_canvas.drawImage(base_file + '.png',0,0,width=612,height=792)         
+        my_canvas.drawImage(base_file + '.png',0,0,width=width,height=height)         
         renderPDF.draw(drawing,my_canvas,0,0)
         my_canvas.save()
         
     return()
 
 def merge_pdf(temp_dir):
+    '''Merges all of the .pdf files in the give directory into a single file in the working directory'''
+
     mergedObject = PdfFileMerger()
     pdf_files =  list(Path(temp_dir).glob('*.pdf'))
 
