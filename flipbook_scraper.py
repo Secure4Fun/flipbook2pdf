@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-''' This is designed to scrape books from flippingbooks.com and build them into PDF's
-This program requires external modules reportlab, and svglib.
+''' 
+This is designed to scrape books from flippingbooks.com and build them into PDF's
+This program requires external modules PyPDF2, reportlab, and svglib.
 This is a work in progress, and happens over multiple steps. 
-Some things can be simplified, such as working on files instead of writing everything to disk,
-but this is left as a way to continue to build functionality for other uses. 
+Some things can be simplified, such as working on files instead of writing everything to disk, but this is left as a 
+way to continue to build functionality for other uses. 
 '''
 
 from pathlib import Path
+from PyPDF2 import PdfFileMerger, PdfFileReader
 import re
 from reportlab.graphics import renderPDF, renderPM
 from reportlab.pdfgen import canvas
@@ -83,15 +85,16 @@ def download_files(all_files,temp_dir):
     #writes all files to the temp_dir, using the key as the file name
     for i in all_files:
         for key,value in i.items():
-            with open(temp_dir + key,'wb') as file:
+            with open(str(temp_dir) +'/'+ key,'wb') as file:
                 file_content = requests.get(value,headers = headers)
                 file.write(file_content.content)
+    print("Finished downloading all of the files.")
     
     #the requests library properly decoded the base64 .webp streaming content as .png, rename files accordingly.
     for old_name in (list(Path(temp_dir).glob('*.webp'))):
-        new_name = str(i).replace('_1.webp','.png')
+        new_name = str(old_name).replace('_1.webp','.png')
         old_name.rename(new_name)
-         
+    print("Renamed all of the *_1.webp files to .png")
     return()
 
 
@@ -115,23 +118,38 @@ def svg_pdf(temp_dir):
         
     return()
 
+def merge_pdf(temp_dir):
+    mergedObject = PdfFileMerger()
+    pdf_files =  list(Path(temp_dir).glob('*.pdf'))
+
+    for file in pdf_files:
+        mergedObject.append(PdfFileReader(str(file),'rb'))
+
+    #to-do, get filename from the flipbook.
+    mergedObject.write("mergedfilesoutput.pdf")
+
+
+    return()
+
 if __name__ == "__main__":
     
     #Change later to get inputs from users
     temp_dir = Path('temp')
     url = 'https://info.umbctraining.com/bookshelf-pp'
     
-    #Check temp directory exists and create if not
+    #Check if the temp directory exists already, and create it if not.
     if temp_dir.exists() == False:
         temp_dir.mkdir(parents = False, exist_ok = False)
+        print("Temporary directory created at {}".format(str(temp_dir)))
    
     #Get the list of files to download.
     files = book_info(url)
+    print("Generated a list of files to download.")
 
     #Download the files to the temp directory.
+    print("Starting file downloads.")
     download_files(files,temp_dir)
-    
+        
     #Convert the .svg and .png files to .pdf files. 
     svg_pdf(temp_dir)
-    
-    #to-do, combine all .pdf files into one document.
+    merge_pdf(temp_dir)
