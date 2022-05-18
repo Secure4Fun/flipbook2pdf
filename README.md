@@ -15,6 +15,7 @@ Note: -d (directory) is optional. It will default to 'temp' inside of the curren
 Note: The final pdf will be saved as in the current working direcotry, as the pdf name from the flipbook.  
 
 If you just download the python script:  
+	
 	On Linux run:  
 		'python3 -m pip install -r ./requirements.txt'  
 		'python3 ./flipbook_scraper.py'  
