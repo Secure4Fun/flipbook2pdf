@@ -119,26 +119,35 @@ def fix_font(font_data):
 
     return()
 
-def fix_svg(file_base):
+def fix_svg(temp_dir,file_base):
     '''This function pulls out the width, heigh, and font information from the .svg.
     It then inserts an image tag pointing to the .png file with the same name,
     this allows them to render properly as standalone .svg files.'''
 
-    with open(file_base + '.svg','r+',encoding='utf-8') as svg_object:
-        svg_data = svg_object.read()
-        width_height = re.findall(r'width="(.*?)" height="(.*?)"',svg_data)[1]
-        font_data = re.findall(r'@font-face {.*?}',svg_data)
-        width = width_height[0]
-        height = width_height[1]
-        png_tag = '<svg:image href="{}.png" x="0" y="0" width="{}" height="{}" />'.format(file_base,width,height)
-        svg_list = svg_data.split('<svg:defs>')
-        svg_list.insert(1,png_tag + '<svg:defs>')
-        svg_data = ''.join(svg_list)
-        svg_object.seek(0)
-        svg_object.write(svg_data)
+    #setting default width and heigh in cases where the below fails.
+    width = 612
+    height = 792
 
-    fix_font(font_data)
-    return(width,height)
+    try:
+        with open(file_base + '.svg','r+',encoding='utf-8') as svg_object:
+            svg_data = svg_object.read()
+            width_height = re.findall(r'rect.*?width="(.*?)" height="(.*?)".*?rect',svg_data)[0]
+            font_data = re.findall(r'@font-face {.*?}',svg_data)
+            width = width_height[0]
+            height = width_height[1]
+            file_name = file_base.removeprefix(str(temp_dir)+'\\')
+            png_tag = '<svg:image href="{}.png" x="0" y="0" width="{}" height="{}" />'.format(file_name,width,height)
+            svg_list = svg_data.split('<svg:defs>')
+            svg_list.insert(1,png_tag + '<svg:defs>')
+            svg_data = ''.join(svg_list)
+            svg_object.seek(0)
+            svg_object.write(svg_data)
+    except Exception as exception:
+        print('Failed to open {}.svg and get width/height/font information'.format(file_base),exception)
+        
+    #to-do, later fix the fonts.
+    #fix_font(font_data)
+    return(int(width),int(height))
 
 def svg_pdf(temp_dir):
     '''Given a directory with .svg and .png files, it converts the .svg files to individual .pdf files.
@@ -148,7 +157,7 @@ def svg_pdf(temp_dir):
 
     for item in svg_files:
         base_file = str(item).removesuffix('.svg')
-        width,height = fix_svg(base_file)
+        width,height = fix_svg(temp_dir,base_file)
 
         #to-do, fix the font issues. Fonts are embedded in the .svg files.
         drawing = svg2rlg(item)
