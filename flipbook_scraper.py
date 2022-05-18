@@ -2,19 +2,10 @@
 # -*- coding: utf-8 -*-
 ''' 
 This is designed to scrape books from flippingbooks.com and build them into PDF's
-This program requires external modules PyPDF2, reportlab, and svglib.
-This is a work in progress, and happens over multiple steps. 
-Some things can be simplified, such as working on files instead of writing everything to disk, but this is left as a 
-way to continue to build functionality for other uses.
-Tested using Python 3.9, other versions should be fine as well.
-
-On Linux run:
-'python3 -m pip install -r ./requirements.txt'
-'python3 ./flipbook_scraper.py'
-
-On Windows run:
-'py.exe -3 -m pip install -r .\requirements.txt'
-'py.exe -3 .\flipbook_scraper.py'
+This program requires external modules PyPDF2, reportlab, and svglib. This is a work in progress. 
+Fonts need to be fixed to use what's embedded in the .svg, and I should be able to get reportlab to replace PyPDF2.
+> python3 ./flipbook_scraper.py -u <url> -d (directory)
+See README.md for more information.
 '''
 
 import argparse
