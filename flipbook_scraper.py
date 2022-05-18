@@ -32,16 +32,21 @@ def book_info(url):
     #to-do, return the file name for the pdf.
     #file_name = re.findall(r'PdfName":"(.*?)"',resp)[0]
     
-    #Get the arguments needed to download the files
-    path_prefix = re.findall(r'PathPrefix":"(.*?)"',resp)[1]
-    policy = re.findall(r'Policy":"(.*?)"',resp)[1]
-    signature = re.findall(r'Signature":"(.*?)"',resp)[1]
-    key_id = re.findall(r'KeyId":"(.*?)"',resp)[1]
+    #Get the arguments needed to determine the content to download.
+    content_version = re.findall(r'contentVersion:\s\'(.*?)\'',resp)[0]
+    base_path = re.findall(r'"ContentRoot":"(.*?)"',resp)[0]
     renderer_version = re.findall(r'RendererVersion":"(.*?)"',resp)[0]
     number_pages = re.findall(r'TotalPages":(.*?)'',',resp)[0]
+    
+    #Gets dictionary (as string here) of the values for the content, not the customization files. 
+    content_values = re.findall(r'{"KeyId.*?'+content_version+'.*?}',resp)[0]    
+    policy = re.findall(r'Policy":"(.*?)"',content_values)[0]
+    signature = re.findall(r'Signature":"(.*?)"',content_values)[0]
+    key_id = re.findall(r'KeyId":"(.*?)"',content_values)[0]
+
 
     #build the file paths based on the arguments.
-    base_path = 'https' + path_prefix
+
     svg_path = 'common/pages/vector/' #to-do, get path from response, not hardcoded
     png_path = 'common/pages/html5substrates/page' #to-do, get path from response, not hardcoded
     post_path = '?Policy=' + policy + '&Signature=' + signature + '&Key-Pair-Id=' + key_id + '&uni=' + renderer_version
@@ -70,8 +75,7 @@ def download_files(all_files,temp_dir):
     '''Given a list of files and temp directory, it sets proper request headers and downloads all of the files''' 
     
     #to-do, figure out mandatory and optional headers.
-    headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0',
-    'Accept':'image/avif,image/webp,*/*',
+    headers = {'Accept':'image/avif,image/webp,*/*',
     'Accept-Language':'en-US,en;q=0.5',
     'Accept-Encoding':'gzip, deflate, br',
     'Origin':'https://online.flippingbook.com',
@@ -80,7 +84,8 @@ def download_files(all_files,temp_dir):
     'Referer':'https://online.flippingbook.com/',
     'Sec-Fetch-Dest':'image',
     'Sec-Fetch-Mode':'cors',
-    'Sec-Fetch-Site':'cross-site'}
+    'Sec-Fetch-Site':'cross-site',
+    'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0'}
 
     #writes all files to the temp_dir, using the key as the file name
     for i in all_files:
@@ -166,7 +171,7 @@ if __name__ == "__main__":
     
     #Change later to get inputs from users
     temp_dir = Path('temp')
-    url = 'https://info.umbctraining.com/bookshelf-pp'
+    url = input('Please enter the full URL for the flipbook: ').strip()
     
     #Check if the temp directory exists already, and create it if not.
     if temp_dir.exists() == False:
