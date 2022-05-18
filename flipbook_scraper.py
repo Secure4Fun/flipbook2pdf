@@ -39,7 +39,7 @@ def book_info(url):
     resp = response_two.content.decode()
     
     #to-do, return the file name for the pdf.
-    #file_name = re.findall(r'PdfName":"(.*?)"',resp)[0]
+    file_name = re.findall(r'PdfName":"(.*?)"',resp)[0]
     
     #Get the arguments needed to determine the content to download.
     content_version = re.findall(r'contentVersion:\s\'(.*?)\'',resp)[0]
@@ -62,7 +62,7 @@ def book_info(url):
     
 
     all_files = file_list(base_path,svg_path,png_path,post_path,int(number_pages))
-    return(all_files)
+    return(file_name,all_files)
 
 def file_list(base_path,svg_path,png_path,post_path,number_pages):
     '''Given the needed information, builds the list of files to download'''
@@ -161,7 +161,7 @@ def svg_pdf(temp_dir):
         
     return()
 
-def merge_pdf(temp_dir):
+def merge_pdf(file_name,temp_dir):
     '''Merges all of the .pdf files in the give directory into a single file in the working directory'''
 
     mergedObject = PdfFileMerger()
@@ -171,14 +171,14 @@ def merge_pdf(temp_dir):
         mergedObject.append(PdfFileReader(str(file),'rb'))
 
     #to-do, get filename from the flipbook.
-    mergedObject.write("mergedfilesoutput.pdf")
+    mergedObject.write(file_name)
 
 
     return()
 
 if __name__ == "__main__":
     
-    #Change later to get inputs from users
+    #Change later to get inputs from users or allow commandline input. 
     temp_dir = Path('temp')
     url = input('Please enter the full URL for the flipbook: ').strip()
     
@@ -188,7 +188,7 @@ if __name__ == "__main__":
         print("Temporary directory created at {}".format(str(temp_dir)))
    
     #Get the list of files to download.
-    files = book_info(url)
+    file_name,files = book_info(url)
     print("Generated a list of files to download.")
 
     #Download the files to the temp directory.
@@ -197,4 +197,4 @@ if __name__ == "__main__":
         
     #Convert the .svg and .png files to .pdf files. 
     svg_pdf(temp_dir)
-    merge_pdf(temp_dir)
+    merge_pdf(file_name,temp_dir)
