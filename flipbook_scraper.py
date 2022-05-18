@@ -43,7 +43,7 @@ def book_info(url):
     #take the given URL, and find the flippingbook.com URL. 
     response = requests.get(url)
     content = response.content.decode()  
-    flipping_book = re.findall(r'a href="(.*?flippingbook.*)/"',content)[0]
+    flipping_book = re.findall(r'href="(.*?flippingbook.*)/"',content)[0]
     
     response_two = requests.get(flipping_book)
     resp = response_two.content.decode()
