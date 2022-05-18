@@ -17,6 +17,7 @@ On Windows run:
 'py.exe -3 .\flipbook_scraper.py'
 '''
 
+import argparse
 from pathlib import Path
 from PyPDF2 import PdfFileMerger, PdfFileReader
 import re
@@ -25,6 +26,15 @@ from reportlab.pdfgen import canvas
 import requests
 from svglib.svglib import svg2rlg
 
+
+def get_args():
+
+    parser = argparse.ArgumentParser(description='Download a Flipbook.')
+    parser.add_argument('-u','--url', dest='url', type=str, required=True, help='URL for the flipbook.')
+    parser.add_argument('-d','--dir', dest='temp_dir', default='temp', type=Path, required=False, help='The temporary directory to download files to.')
+    args = parser.parse_args()
+
+    return(args.url,args.temp_dir)
 
 def book_info(url):
     '''Takes the URL to a flippingbook, pulls out information to download the files, and returns a list of files
@@ -186,10 +196,7 @@ def merge_pdf(file_name,temp_dir):
     return()
 
 if __name__ == "__main__":
-    
-    #Change later to get inputs from users or allow commandline input. 
-    temp_dir = Path('temp')
-    url = input('Please enter the full URL for the flipbook: ').strip()
+    url,temp_dir = get_args()
     
     #Check if the temp directory exists already, and create it if not.
     if temp_dir.exists() == False:
@@ -199,11 +206,17 @@ if __name__ == "__main__":
     #Get the list of files to download.
     file_name,files = book_info(url)
     print("Generated a list of files to download.")
+    print("The book will be saved as {}.".format(file_name))
 
     #Download the files to the temp directory.
     print("Starting file downloads.")
     download_files(files,temp_dir)
-        
+    print("File downloads are complete.")
+    
     #Convert the .svg and .png files to .pdf files. 
+    print("Starting conversion to pdf's.")
     svg_pdf(temp_dir)
+    
+    print("Bulding final {} in the current working directory".format(file_name))
     merge_pdf(file_name,temp_dir)
+    print("{} is complete.".format(file_name))
