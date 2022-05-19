@@ -20,7 +20,7 @@ def main():
 
 def fix_font(font_data):
     """Function to take the font data from the .svg files and write it to the path,
-    then fix the svglib/reportlabs font issues
+    then fix the svglib/reportlabs font issues.
     """
     return()
 

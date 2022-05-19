@@ -50,7 +50,7 @@ def book_info(url):
 
 
 def file_list(base_path,svg_path,png_path,post_path,number_pages):
-    """Builds the list of files to download"""
+    """Builds the list of files to download."""
     svg_ext = '.svg'
     png_ext = '_1.webp'
     all_files = []
@@ -66,7 +66,7 @@ def file_list(base_path,svg_path,png_path,post_path,number_pages):
 
 def download_files(all_files,temp_dir):
     """Given a list of files and temp directory, 
-    it sets proper request headers and downloads all of the files
+    it sets proper request headers and downloads all of the files.
     """
     # To-do, figure out mandatory and optional headers.
     headers = {'Accept':'image/avif,image/webp,*/*',
