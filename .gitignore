@@ -43,6 +43,8 @@ bld/
 
 # Visual Studio 2017 auto generated files
 Generated\ Files/
+*.pyproj
+*.sln
 
 # MSTest test Results
 [Tt]est[Rr]esult*/
