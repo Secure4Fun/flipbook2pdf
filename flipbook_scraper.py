@@ -7,36 +7,39 @@ Fonts need to be fixed to use what's embedded in the .svg.
 
 from pathlib import Path
 import re
-from urllib.request import urlopen, Request
+from urllib.request import urlopen
 
 import requests
 
 
 def main():
+    """ Main function. Will be modified to allow calling the scraper as
+    a standalone app
+    """
     print("This is designed to scrape PDF books from flippingbooks.com.")
-    exit(0)
+    return
 
 
 def book_info(url):
-    """Takes the URL to a flippingbook, pulls out information to 
-    download the files, and returns a list of files. 
+    """ Takes the URL to a flippingbook, pulls out information to
+    download the files, and returns a list of files.
     """
-    # Take the given URL, and find the flippingbook.com URL. 
+    # Take the given URL, and find the flippingbook.com URL.
     with urlopen(url) as response:
-        content = (response.read()).decode()  
+        content = (response.read()).decode()
     flipping_book = re.findall(r'href="(.*?flippingbook.*)/"',content)[0]
     with urlopen(flipping_book) as response:
         resp = (response.read()).decode()
     file_name = re.findall(r'PdfName":"(.*?)"',resp)[0]
-    
+
     # Get the arguments needed to determine the content to download.
     content_version = re.findall(r'contentVersion:\s\'(.*?)\'',resp)[0]
     base_path = re.findall(r'"ContentRoot":"(.*?)"',resp)[0]
     renderer_version = re.findall(r'RendererVersion":"(.*?)"',resp)[0]
     number_pages = re.findall(r'TotalPages":(.*?)'',',resp)[0]
-    
-    # Gets dictionary (as string here) of the values for the content, not the customization files. 
-    content_values = re.findall(r'{"KeyId.*?'+content_version+'.*?}',resp)[0]    
+
+    # Gets dictionary (as string here) of the values for the content, not the customization files.
+    content_values = re.findall(r'{"KeyId.*?'+content_version+'.*?}',resp)[0]
     policy = re.findall(r'Policy":"(.*?)"',content_values)[0]
     signature = re.findall(r'Signature":"(.*?)"',content_values)[0]
     key_id = re.findall(r'KeyId":"(.*?)"',content_values)[0]
@@ -44,13 +47,14 @@ def book_info(url):
     # Build the file paths based on the arguments.
     svg_path = 'common/pages/vector/'  # To-do, get path from response, not hardcoded
     png_path = 'common/pages/html5substrates/page'  # To-do, get path from response, not hardcoded
-    post_path = '?Policy=' + policy + '&Signature=' + signature + '&Key-Pair-Id=' + key_id + '&uni=' + renderer_version
+    post_path = ('?Policy=' + policy + '&Signature=' + signature + '&Key-Pair-Id='
+                 + key_id + '&uni=' + renderer_version)
     all_files = file_list(base_path,svg_path,png_path,post_path,int(number_pages))
     return(file_name,all_files)
 
 
 def file_list(base_path,svg_path,png_path,post_path,number_pages):
-    """Builds the list of files to download."""
+    """ Builds the list of files to download. """
     svg_ext = '.svg'
     png_ext = '_1.webp'
     all_files = []
@@ -58,14 +62,14 @@ def file_list(base_path,svg_path,png_path,post_path,number_pages):
         svg_file = format(i,'04d') + svg_ext
         png_file = format(i,'04d') + png_ext
         full_svg_path = base_path + svg_path + svg_file + post_path
-        full_png_path = base_path + png_path + png_file + post_path 
+        full_png_path = base_path + png_path + png_file + post_path
         all_files.append({svg_file:full_svg_path})
         all_files.append({png_file:full_png_path})
     return(all_files)
 
 
 def download_files(all_files,temp_dir):
-    """Given a list of files and temp directory, 
+    """ Given a list of files and temp directory,
     it sets proper request headers and downloads all of the files.
     """
     # To-do, figure out mandatory and optional headers.
@@ -91,7 +95,7 @@ def download_files(all_files,temp_dir):
                 # To-do, get urllib Request to decode svg stream to remove requests module.
                 #request = Request(value, headers = headers)
                 #with urlopen(request, timeout = 10) as response:
-                    #file_content = response.read()                
+                    #file_content = response.read()
     print("Finished downloading all of the files.")
     
     # The requests library properly decoded the .webp as .png, rename files accordingly.
@@ -99,9 +103,7 @@ def download_files(all_files,temp_dir):
         new_name = str(old_name).replace('_1.webp','.png')
         old_name.rename(new_name)
     print("Renamed all of the *_1.webp files to .png")
-    return()
-
+    return
 
 if __name__ == "__main__":
     main()
-
