@@ -21,6 +21,10 @@ def main(url,temp_dir):
     # Get the book information.
     book_info = flipbook_scraper.book_info(url)
     file_name = book_info.get('file_name')
+    if book_info.get('password'):
+        print(f"Can't get an accurate list of files due to the password on {file_name}.")
+        return(1)
+
     # Get the list of files to download.
     book_files = flipbook_scraper.file_list(book_info)
     print("Generated a list of files to download.")

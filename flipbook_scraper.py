@@ -26,6 +26,7 @@ def book_info(url):
     and returns a dictionary with the book information.
     """
     book_info={'given_url':url}
+    book_info['password'] = False
 
     # Take the given URL, and find the flippingbook.com URL.
     try:    
@@ -56,14 +57,18 @@ def book_info(url):
     book_info['number_pages'] = re.findall(r'TotalPages":(.*?)'',',resp)[0]
 
     # Gets the access values for the content, not the customization files.
-    access_values = re.findall(r'{"KeyId.*?'+book_info.get('content_version')+'.*?}',resp)[0]
-    book_info['policy'] = re.findall(r'Policy":"(.*?)"',access_values)[0]
-    book_info['signature'] = re.findall(r'Signature":"(.*?)"',access_values)[0]
-    book_info['key_id'] = re.findall(r'KeyId":"(.*?)"',access_values)[0]
-    book_info['post_path'] = ('?Policy=' + book_info.get('policy') 
-                              + '&Signature=' + book_info.get('signature') 
-                              + '&Key-Pair-Id=' + book_info.get('key_id') 
-                              + '&uni=' + book_info.get('renderer_version'))
+    try:
+        access_values = re.findall(r'{"KeyId.*?'+book_info.get('content_version')+'.*?}',resp)[0]
+        book_info['policy'] = re.findall(r'Policy":"(.*?)"',access_values)[0]
+        book_info['signature'] = re.findall(r'Signature":"(.*?)"',access_values)[0]
+        book_info['key_id'] = re.findall(r'KeyId":"(.*?)"',access_values)[0]
+        book_info['post_path'] = ('?Policy=' + book_info.get('policy') 
+                                  + '&Signature=' + book_info.get('signature') 
+                                  + '&Key-Pair-Id=' + book_info.get('key_id') 
+                                  + '&uni=' + book_info.get('renderer_version'))
+    except Exception as exception:
+        print("Failed to get the access policy, likely due to password issues.")
+        book_info['password'] = True
 
     # Define file path information.
     # To-do, get path from response, not hardcoded
@@ -77,6 +82,10 @@ def book_info(url):
 
 def file_list(book_info):
     """ Builds the list of files to download. """
+    if book_info.get('password'):
+        print("Can't get an accurate list of files due to the password.")
+        return(1)
+
     all_files = []
     for page_num in range(1,int(book_info.get('number_pages'))+1):
         page_num = format(page_num,'04d')
