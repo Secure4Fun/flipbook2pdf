@@ -18,15 +18,17 @@ import svg2pdf
 
 def main(url,temp_dir):
     """ This is the main application flipbook2pdf """
-
+    # Get the book information.
+    book_info = flipbook_scraper.book_info(url)
+    file_name = book_info.get('file_name')
     # Get the list of files to download.
-    file_name,files = flipbook_scraper.book_info(url)
+    book_files = flipbook_scraper.file_list(book_info)
     print("Generated a list of files to download.")
     print("The book will be saved as {}.".format(file_name))
 
     # Download the files to the temp directory.
-    print("Starting file downloads.")
-    flipbook_scraper.download_files(files,temp_dir)
+    print("Starting file downloads in {}.".format(temp_dir))
+    flipbook_scraper.download_files(book_files,temp_dir)
     print("File downloads are complete.")
 
     # Convert the .svg and .png files to .pdf files.

@@ -3,6 +3,7 @@
 This is designed to scrape PDF books from flippingbooks.com.
 The .svg and .png files are saved to a temp directory.
 Fonts need to be fixed to use what's embedded in the .svg.
+External dependency on requests
 """
 
 from pathlib import Path
@@ -21,50 +22,73 @@ def main():
 
 
 def book_info(url):
-    """ Takes the URL to a flippingbook, pulls out information to
-    download the files, and returns a list of files.
+    """ Takes the URL to a flippingbook, parses through the page,
+    and returns a dictionary with the book information.
     """
+    book_info={'given_url':url}
+
     # Take the given URL, and find the flippingbook.com URL.
-    with urlopen(url) as response:
-        content = (response.read()).decode()
-    flipping_book = re.findall(r'href="(.*?flippingbook.*)/"',content)[0]
-    with urlopen(flipping_book) as response:
-        resp = (response.read()).decode()
-    file_name = re.findall(r'PdfName":"(.*?)"',resp)[0]
+    try:    
+        with urlopen(url) as response:
+            content = (response.read()).decode()
+    except Exception as exception:
+        print("Unable to get the contents of URL:",url)
+        return(1)
+
+    flipping_book = re.findall(r'href="(.*?flippingbook.com/view/.*?)"',content)[0]
+    try:
+        with urlopen(flipping_book) as response:
+            resp = (response.read()).decode()
+    except Exception as exception:
+        print("Unable to get the contents of the flippingbook URL:",flipping_book)
+        return(1)
+    
+    # Get the general book information.
+    book_info['image'] = re.findall(r'<meta itemprop="image" content="(.*?)"/>', resp)[0]
+    book_info['title'] = re.findall(r'<title>(.*?)</title>',resp)[0]
+    book_info['primary_url'] = re.findall(r'<link rel="canonical" href="(.*?)"/>',resp)[0]
+    book_info['file_name'] = re.findall(r'PdfName":"(.*?)"',resp)[0]
 
     # Get the arguments needed to determine the content to download.
-    content_version = re.findall(r'contentVersion:\s\'(.*?)\'',resp)[0]
-    base_path = re.findall(r'"ContentRoot":"(.*?)"',resp)[0]
-    renderer_version = re.findall(r'RendererVersion":"(.*?)"',resp)[0]
-    number_pages = re.findall(r'TotalPages":(.*?)'',',resp)[0]
+    book_info['content_version'] = re.findall(r'contentVersion:\s\'(.*?)\'',resp)[0]
+    book_info['base_path'] = re.findall(r'"ContentRoot":"(.*?)"',resp)[0]
+    book_info['renderer_version'] = re.findall(r'RendererVersion":"(.*?)"',resp)[0]
+    book_info['number_pages'] = re.findall(r'TotalPages":(.*?)'',',resp)[0]
 
-    # Gets dictionary (as string here) of the values for the content, not the customization files.
-    content_values = re.findall(r'{"KeyId.*?'+content_version+'.*?}',resp)[0]
-    policy = re.findall(r'Policy":"(.*?)"',content_values)[0]
-    signature = re.findall(r'Signature":"(.*?)"',content_values)[0]
-    key_id = re.findall(r'KeyId":"(.*?)"',content_values)[0]
+    # Gets the access values for the content, not the customization files.
+    access_values = re.findall(r'{"KeyId.*?'+book_info.get('content_version')+'.*?}',resp)[0]
+    book_info['policy'] = re.findall(r'Policy":"(.*?)"',access_values)[0]
+    book_info['signature'] = re.findall(r'Signature":"(.*?)"',access_values)[0]
+    book_info['key_id'] = re.findall(r'KeyId":"(.*?)"',access_values)[0]
+    book_info['post_path'] = ('?Policy=' + book_info.get('policy') 
+                              + '&Signature=' + book_info.get('signature') 
+                              + '&Key-Pair-Id=' + book_info.get('key_id') 
+                              + '&uni=' + book_info.get('renderer_version'))
 
-    # Build the file paths based on the arguments.
-    svg_path = 'common/pages/vector/'  # To-do, get path from response, not hardcoded
-    png_path = 'common/pages/html5substrates/page'  # To-do, get path from response, not hardcoded
-    post_path = ('?Policy=' + policy + '&Signature=' + signature + '&Key-Pair-Id='
-                 + key_id + '&uni=' + renderer_version)
-    all_files = file_list(base_path,svg_path,png_path,post_path,int(number_pages))
-    return(file_name,all_files)
+    # Define file path information.
+    # To-do, get path from response, not hardcoded
+    book_info['svg_path'] = 'common/pages/vector/'
+    book_info['png_path'] = 'common/pages/html5substrates/page' 
+    book_info['svg_ext'] = '.svg'
+    book_info['png_ext'] = '_1.webp'
+    
+    return(book_info)
 
 
-def file_list(base_path,svg_path,png_path,post_path,number_pages):
+def file_list(book_info):
     """ Builds the list of files to download. """
-    svg_ext = '.svg'
-    png_ext = '_1.webp'
     all_files = []
-    for i in range(1,number_pages+1):
-        svg_file = format(i,'04d') + svg_ext
-        png_file = format(i,'04d') + png_ext
-        full_svg_path = base_path + svg_path + svg_file + post_path
-        full_png_path = base_path + png_path + png_file + post_path
+    for page_num in range(1,int(book_info.get('number_pages'))+1):
+        page_num = format(page_num,'04d')
+        svg_file = page_num + book_info.get('svg_ext')
+        png_file = page_num + book_info.get('png_ext')
+        full_svg_path = (book_info.get('base_path') + book_info.get('svg_path') 
+                         + svg_file + book_info.get('post_path'))
+        full_png_path = (book_info.get('base_path') + book_info.get('png_path') 
+                         + png_file + book_info.get('post_path'))
         all_files.append({svg_file:full_svg_path})
         all_files.append({png_file:full_png_path})
+
     return(all_files)
 
 
@@ -92,7 +116,7 @@ def download_files(all_files,temp_dir):
             with open(str(temp_dir) +'/'+ key,'wb') as file:
                 file_content = requests.get(value,headers = headers)
                 file.write(file_content.content)
-                # To-do, get urllib Request to decode svg stream to remove requests module.
+                # To-do, get urllib Request to decode streams to remove requests module.
                 #request = Request(value, headers = headers)
                 #with urlopen(request, timeout = 10) as response:
                     #file_content = response.read()
