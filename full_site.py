@@ -4,6 +4,7 @@ This module is being developed to scrape the sitemap files.
 It writes out a small csv with basic book information.
 It will be able to update the document listings on a recurring basis.
 """
+
 import csv
 from lxml import etree
 from urllib import request
@@ -26,7 +27,6 @@ def parse_sitemap(url):
     dict of sites with books.
     """
     site_maps = {}    
-    
     content = get_url(url)
     root = etree.fromstring(content)
     
@@ -61,6 +61,8 @@ def book_list(file_name):
 
 def site_csv(book_url):
     """ Takes the book URL and appends basic info to a CSV file. """
+    # To-do, use csv.Dictwriter to simplify and incorporate headers.
+    # To-do, allow users to specify file name.
     try:
         book_info = flipbook_scraper.book_info(book_url)
     except Exception as exception:

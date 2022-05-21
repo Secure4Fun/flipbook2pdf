@@ -4,6 +4,7 @@ This module is to convert .svg's to a .pdf document.
 Fonts need to be fixed to use what's embedded in the .svg.
 """
 
+import argparse
 from pathlib import Path
 import re
 
@@ -13,23 +14,46 @@ from reportlab.pdfgen import canvas
 from svglib.svglib import svg2rlg
 
 
-def main():
+def main(args):
     """ Main function for the module. Plan to turn it into a stand-alone
-   for svg to pdf converstion
+   for svg to pdf converstion. Requires redefining functions.
    """
     print("This module is to convert .svg's to a .pdf document")
-    return None
+    print(args)
+    return
+
+
+def get_args():
+    """ Parses the commandline input for running standalone. """
+    parser = argparse.ArgumentParser(
+        description = 'Converts SVG files to PDF files. You must speicfy the path to an existing'
+        'file or directory. You can optionally specify  a temporary working directory, otherwise'
+        '"<current directory>/temp" will be used.')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-f', '--file', type=Path,
+                        help='Path to a single SVG file to convert.')
+    group.add_argument('-d', '--dir', type=Path, 
+                        help='Path to a directory of SVG files to convert.')
+    parser.add_argument('-t', '--temp', type=Path, default = 'temp', nargs='?',
+                        help='Path to a temporary working directory.')
+    args = parser.parse_args()
+    
+    if (args.file != None) and (Path.exists(args.file) == False):
+        exit(f'The file {args.file} does not exist.')
+    if (args.dir != None) and (Path.exists(args.dir) == False):
+        exit(f'The directory {args.dir} does not exist.')
+    return(args)
 
 
 def fix_font(font_data):
-    """Function to take the font data from the .svg files and write it to the path,
+    """ To-do, function to take the font data from the .svg files and write it to the path,
     then fix the svglib/reportlabs font issues.
     """
-    return()
+    return
 
 
 def fix_svg(temp_dir,file_base):
-    """This function pulls out the width, height, and font information
+    """ To-do, This function pulls out the width, height, and font information
     from the .svg. It then inserts an image tag pointing to the .png
     file with the same name, this allows them to render properly as
     standalone .svg files.
@@ -55,7 +79,7 @@ def fix_svg(temp_dir,file_base):
             svg_object.seek(0)
             svg_object.write(svg_data)
     except Exception as exception:
-        print('Failed to open {}.svg and get width/height/font information'.format(file_base),
+        print(f'Failed to open {file_base}.svg and get width/height/font information.',
               exception)
 
     # To-do, fix the fonts.
@@ -64,7 +88,7 @@ def fix_svg(temp_dir,file_base):
 
 
 def svg_pdf(temp_dir):
-    """Given a directory with .svg and .png files, it converts the .svg
+    """ Given a directory with .svg and .png files, it converts the .svg
     files to individual .pdf files. If there is a .png with the same
     file name, it draws the .svg on top of the .png file.
     """
@@ -84,7 +108,7 @@ def svg_pdf(temp_dir):
 
 
 def merge_pdf(file_name,temp_dir):
-    """Merges all of the .pdf files in the give directory into a single
+    """ To-do, Merges all of the .pdf files in the give directory into a single
     file in the working directory.
     """
     merged_object = PdfFileMerger()
@@ -96,4 +120,5 @@ def merge_pdf(file_name,temp_dir):
 
 
 if __name__ == "__main__":
-    main()
+    args = get_args()
+    main(args)
