@@ -41,7 +41,7 @@ def book_info(url):
         with urlopen(flipping_book) as response:
             resp = (response.read()).decode()
     except Exception as exception:
-        print("Unable to get the contents of the flippingbook URL:",flipping_book)
+        print("Failed to get the contents of the flippingbook URL:",flipping_book)
         return(1)
     
     # Get the general book information.
@@ -67,7 +67,7 @@ def book_info(url):
                                   + '&Key-Pair-Id=' + book_info.get('key_id') 
                                   + '&uni=' + book_info.get('renderer_version'))
     except Exception as exception:
-        print("Failed to get the access policy, likely due to password issues.")
+        print("Failed to get the access policy, likely due to password issues, for URL:",url)
         book_info['password'] = True
 
     # Define file path information.
