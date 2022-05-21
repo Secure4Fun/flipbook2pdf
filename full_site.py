@@ -61,18 +61,29 @@ def book_list(file_name):
 
 def site_csv(book_url):
     """ Takes the book URL and appends basic info to a CSV file. """
-    book_info = flipbook_scraper.book_info(book_url)
-    row = (book_info.get('title'), book_info.get('file_name'), book_info.get('number_pages'),
-           book_info.get('primary_url'),book_info.get(password))
-    with open('books.csv','a',newline='',encoding = 'utf-8') as csv_file:
-        writer = csv.writer(csv_file, dialect='excel')
-        writer.writerow(row)
+    try:
+        book_info = flipbook_scraper.book_info(book_url)
+    except Exception as exception:
+        print("Failed to get book info from flipbook_scraper for:", book_url)
+        return
+    try:
+        row = (book_info.get('title'), book_info.get('file_name'), book_info.get('number_pages'),
+               book_info.get('primary_url'),book_info.get('password'))
+    except Exception as exception:
+        print("Failed to properly parse out book info for:", book_url)
+   
+    try:
+        with open('books.csv','a',newline='',encoding = 'utf-8') as csv_file:
+            writer = csv.writer(csv_file, dialect='excel')
+            writer.writerow(row)
+    except Exception as exception:
+        print("Failed to write book info for:", book_url)
     return
 
 if __name__ == "__main__":
 
-    sitemap_url = 'https://online.flippingbook.com/sitemap/sitemap.xml'
-    books = parse_sitemap(sitemap_url)
+    #sitemap_url = 'https://online.flippingbook.com/sitemap/sitemap.xml'
+    #books = parse_sitemap(sitemap_url)
    
     book_file = 'book_list.txt'
     book_list(book_file)
