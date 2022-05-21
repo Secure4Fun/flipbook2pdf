@@ -82,8 +82,8 @@ def site_csv(book_url):
 
 if __name__ == "__main__":
 
-    #sitemap_url = 'https://online.flippingbook.com/sitemap/sitemap.xml'
-    #books = parse_sitemap(sitemap_url)
+    sitemap_url = 'https://online.flippingbook.com/sitemap/sitemap.xml'
+    books = parse_sitemap(sitemap_url)
    
     book_file = 'book_list.txt'
     book_list(book_file)
