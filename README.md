@@ -1,8 +1,8 @@
 # flipbook2pdf.py
-This is designed to scrape books from flippingbooks.com and build them into PDF's.  
+This is designed to convert books from flippingbooks.com and build them into PDF's.  
 If you have a link with an embedded flippingbook this works as well. 
 I do not have access to any that require passwords, so those are unsupported for now.
-This is meant for your own use, on books you have permission to download.
+This is meant for your own use, on books you have permission to download, and is in no way officially affiliated with flippingbooks.com.
 This program depends on PyPDF2, reportlab, requests, and svglib.
 Fonts need to be fixed to use what's embedded in the .svg, work in progress on that. 
 
